@@ -1,8 +1,4 @@
-/*
- * @Date @Time.
- * @Author kinwyb<kinwyb@aliyun.com>
- */
-package com.heldiam.jrpcx.examples.common;
+package com.heldiam.jrpcx.examples.exampleData;
 
 /**
  * 测试接口

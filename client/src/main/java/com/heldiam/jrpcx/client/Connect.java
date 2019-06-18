@@ -11,8 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 服务器连接类
@@ -27,7 +27,7 @@ class Connect {
     private final int max_reconnect = 5;
     private static final Logger LOG = LoggerFactory.getLogger(Connect.class.getName());
     private final ConnectHandler handler = new ConnectHandler();
-    private Map<String, Channel> channelMap = new HashMap<>();
+    private Map<String, Channel> channelMap = new ConcurrentHashMap<>();
 
     Connect() {
         BOOT.option(ChannelOption.SO_KEEPALIVE, true);
@@ -42,6 +42,9 @@ class Connect {
         });
     }
 
+    public ConnectHandler getHandler() {
+        return handler;
+    }
 
     /**
      * 获取一个连接
@@ -105,6 +108,9 @@ class Connect {
         }
         channelMap.forEach((k, v) -> channelClose(v));
         channelMap.clear();
+        if (handler != null) {
+            handler.Close();
+        }
     }
 
 }

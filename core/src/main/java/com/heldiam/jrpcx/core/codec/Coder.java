@@ -7,6 +7,7 @@ import com.heldiam.jrpcx.core.common.Feature;
 import com.heldiam.jrpcx.core.common.FeaturePool;
 import com.heldiam.jrpcx.core.common.RpcException;
 import com.heldiam.jrpcx.core.protocol.*;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,6 +22,8 @@ import java.util.concurrent.atomic.AtomicLong;
 public class Coder {
 
     public static AtomicLong seqAtomic = new AtomicLong();
+
+    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(Coder.class.getName());
 
     private static final Map<Integer, ICodec> _coderMap = new HashMap() {{
         put(SerializeType.JSON.value(), new Json());
@@ -67,20 +70,20 @@ public class Coder {
         String id = String.valueOf(msg.getSeq());
         Feature f = FeaturePool.GetUseFeature(id);
         if (f == null) {
-            throw new RpcException("Feature is null");
+            LOG.error("未知请求[" + id + "]结果");
+            return;
         }
         if (msg.getMessageStatusType() == MessageStatusType.Error) {
-            f.setException(new RpcException(msg.getMetadata().get(Constants.RPCX_ERROR_MESSAGE)));
-            f.setRetObject(null);
+            f.setException(new RpcException("服务调用失败:" + msg.getMetadata().get(Constants.RPCX_ERROR_MESSAGE)));
+            f.setResult(null);
             return;
         }
         try {
             Object obj = codec.decode(msg.payload, f.getRetClass());
             f.setResult(obj);
-            f.setException(null);
         } catch (Exception ex) {
             f.setException(ex);
-            f.setRetObject(null);
+            f.setResult(null);
         }
     }
 

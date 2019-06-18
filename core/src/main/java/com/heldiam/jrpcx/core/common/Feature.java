@@ -6,6 +6,7 @@ package com.heldiam.jrpcx.core.common;
 
 /**
  * 返回结果对象
+ *
  * @author kinwyb
  * @date 2019-06-14 16:19
  */
@@ -20,18 +21,16 @@ public class Feature {
     private boolean isRet = false;
     private final Object lock = new Object();
 
-    public void setRetObject(Object retObject) {
-        this.retObject = retObject;
-    }
-
     public void setResult(Object retObject) {
-        if(retObject != null) {
-            FeaturePool.cloneObj(retObject, this.retObject); //拷贝结果对象
-        }
+        this.retObject = retObject;
         synchronized (lock) {
             lock.notify();
         }
         isRet = true;
+    }
+
+    public Object getRetObject() {
+        return retObject;
     }
 
     /**
@@ -62,6 +61,7 @@ public class Feature {
     public void Close() {
         isRet = false;
         exception = null;
+        retObject = null;
         FeaturePool.push(this);
     }
 

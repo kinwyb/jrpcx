@@ -1,10 +1,10 @@
 package com.heldiam.jrpcx.examples.server;
 
 import com.heldiam.jrpcx.core.discovery.EtcdV2Discovery;
-import com.heldiam.jrpcx.examples.common.Arith;
-import com.heldiam.jrpcx.examples.common.ArithMulResponse;
 import com.heldiam.jrpcx.server.Server;
 import com.heldiam.jrpcx.server.Service;
+import com.heldiam.jrpcx.examples.exampleData.Arith;
+import com.heldiam.jrpcx.examples.exampleData.ArithMulResponse;
 import org.apache.log4j.BasicConfigurator;
 
 /**

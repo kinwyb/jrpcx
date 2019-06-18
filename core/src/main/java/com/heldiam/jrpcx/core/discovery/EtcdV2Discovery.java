@@ -3,7 +3,6 @@ package com.heldiam.jrpcx.core.discovery;
 import com.heldiam.jrpcx.core.common.RpcException;
 import com.heldiam.jrpcx.core.common.StringUtils;
 import mousio.etcd4j.EtcdClient;
-import mousio.etcd4j.promises.EtcdResponsePromise;
 import mousio.etcd4j.requests.EtcdKeyPutRequest;
 import mousio.etcd4j.responses.EtcdException;
 import mousio.etcd4j.responses.EtcdKeysResponse;
@@ -21,7 +20,6 @@ import java.util.*;
 public class EtcdV2Discovery extends BaseDiscovery {
 
     private EtcdClient client;
-    private EtcdResponsePromise<EtcdKeysResponse> promise;
     private Map<String, List<String>> serviceMap = new HashMap<>();
 
     private static final Logger LOG = LoggerFactory.getLogger(EtcdV2Discovery.class.getName());
@@ -31,6 +29,8 @@ public class EtcdV2Discovery extends BaseDiscovery {
         Arrays.stream(etcdHosts).forEach(v -> urls.add(URI.create("http://" + v)));
         client = new EtcdClient(urls.toArray(new URI[]{}));
     }
+
+    private boolean shutdown = false;
 
     @Override
     public List<String> getServices(String ServiceName) {
@@ -44,13 +44,13 @@ public class EtcdV2Discovery extends BaseDiscovery {
     }
 
     private void etcdWatch() {
+        if (shutdown) {
+            return;
+        }
         LOG.debug("开启etcd变动监听");
         try {
-            if (promise != null) {
-                promise.cancel();
-            }
-            promise = client.getDir(getBasePath()).recursive().waitForChange().consistent().send();
-            promise.addListener(promisea -> {
+            client.getDir(getBasePath()).recursive().waitForChange()
+                    .consistent().send().addListener(promisea -> {
                 LOG.debug("etcd数据变动");
                 try {
                     EtcdKeysResponse response = promisea.get();
@@ -65,12 +65,14 @@ public class EtcdV2Discovery extends BaseDiscovery {
                 } catch (Exception e) {
                     LOG.error("etcd监听异常:" + e.getMessage(), e);
                 }
-                etcdWatch();
+                new Thread(() -> etcdWatch()).start();
             });
-
         } catch (Exception e) {
+            if (shutdown) { //关闭的直接返回
+                return;
+            }
             LOG.error("etcd监听异常:" + e.getMessage(), e);
-            etcdWatch();
+            new Thread(() -> etcdWatch()).start();
         }
     }
 
@@ -120,13 +122,11 @@ public class EtcdV2Discovery extends BaseDiscovery {
 
     @Override
     public void Close() {
+        shutdown = true;
         try {
             client.close();
         } catch (IOException e) {
             LOG.warn("etcd关闭失败");
-        }
-        if (promise != null) {
-            promise.cancel();
         }
     }
 

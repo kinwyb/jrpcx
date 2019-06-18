@@ -31,9 +31,7 @@ class CglibProxy implements MethodInterceptor {
         Object ret = cgResp.getbean(cls);
         Feature feature = cgResp.getFeature(ret);
         try {
-            if (args.length > 1) {
-                client.Call(className, methodName, args[0], feature);
-            } else if (args.length > 0) {
+            if (args.length > 0) {
                 client.Call(className, methodName, args[0], feature);
             } else {
                 client.Call(className, methodName, null, feature);

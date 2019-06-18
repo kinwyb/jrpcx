@@ -1,4 +1,4 @@
-package com.heldiam.jrpcx.examples.common;
+package com.heldiam.jrpcx.examples.exampleData;
 
 import java.io.Serializable;
 

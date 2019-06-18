@@ -43,7 +43,6 @@ class CglibProxyResponseObject implements MethodInterceptor {
         BeanMap beanMap = BeanMap.create(o);
         Feature f = FeaturePool.get();
         f.setRetClass(cls);
-        f.setRetObject(o);
         beanMap.put("feature", f);
         beanMap.put("done", false);
         return (T) beanMap.getBean();
@@ -73,6 +72,7 @@ class CglibProxyResponseObject implements MethodInterceptor {
             Feature f = (Feature) beanMap.get("feature");
             try {
                 f.Done();
+                FeaturePool.cloneObj(f.getRetObject(),obj);
             } catch (RuntimeException ex) {
                 throw ex;
             } finally {

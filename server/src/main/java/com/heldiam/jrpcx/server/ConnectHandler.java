@@ -62,7 +62,7 @@ public class ConnectHandler extends SimpleChannelInboundHandler<Command> {
                         cmd = msg.requestToResponse();
                         cmd.getMessage().payload = codec.encode(resp);
                     } catch (Exception ex) {
-                        LOG.error("服务调用异常", ex);
+                        LOG.error("服务调用异常:" + ex.getMessage(), ex);
                         cmd = msg.requestToResponse();
                         cmd.setErrorMessage("服务异常", ex.getMessage());
                     }

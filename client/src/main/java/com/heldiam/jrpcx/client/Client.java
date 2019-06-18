@@ -20,8 +20,6 @@ import java.util.LinkedList;
  **/
 public class Client {
 
-    private final ConnectHandler handler;
-
     //连接的服务器地址标记
     private URL addressURL;
 
@@ -42,7 +40,7 @@ public class Client {
     /**
      * 编码方式
      */
-    private SerializeType serializeType = SerializeType.JSON;
+    private SerializeType serializeType = SerializeType.MsgPack;
 
     /**
      * 代理对象
@@ -53,7 +51,6 @@ public class Client {
 
     public Client(Selector selector, @NotNull IDiscovery discovery) {
         this.selector = selector;
-        handler = new ConnectHandler();
         this.discovery = discovery;
         discovery.StartWatch();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> this.Close()));
@@ -101,18 +98,16 @@ public class Client {
         } catch (Exception ex) {
             throw new RpcException(ex);
         }
-        LOG.debug("请求服务地址:" + channel.remoteAddress());
+//        LOG.debug("请求服务地址:" + channel.remoteAddress());
         Command data;
         try {
-            data = handler.coder.getRequest(service, method, param, serializeType, feature);
+            data = connect.getHandler().coder.getRequest(service, method, param, serializeType, feature);
         } catch (Exception ex) {
             LOG.debug("消息序列化失败[" + ex.getMessage() + "]");
             throw new RpcException("消息序列化失败[" + ex.getMessage() + "]", ex, "Codec");
         }
         this.channel.writeAndFlush(data).addListener(f -> {
-            if (f.isSuccess()) {
-                LOG.debug("服务请求发送成功");
-            } else { //todo: Fail重试
+            if (!f.isSuccess()) {
                 LOG.debug("服务请求发送失败");
             }
         });

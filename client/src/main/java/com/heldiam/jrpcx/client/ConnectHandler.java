@@ -1,6 +1,8 @@
 package com.heldiam.jrpcx.client;
 
 import com.heldiam.jrpcx.core.codec.Coder;
+import com.heldiam.jrpcx.core.common.QueueChannel;
+import com.heldiam.jrpcx.core.common.RpcException;
 import com.heldiam.jrpcx.core.protocol.Command;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
@@ -20,9 +22,31 @@ public class ConnectHandler extends SimpleChannelInboundHandler<Command> {
 
     public final Coder coder = new Coder();
 
+    /**
+     * 执行队列
+     */
+    private QueueChannel<Command> executeChannel = new QueueChannel<>();
+
+    public ConnectHandler() {
+        executeChannel.SubmitRun((r) -> {
+            try {
+                coder.decodeCmd(r);
+            } catch (RpcException e) {
+                LOG.error(e.getMessage(), e);
+            }
+        });
+    }
+
+    /**
+     * 关闭
+     */
+    public void Close() {
+        executeChannel.Close();
+    }
+
     @Override
     protected void channelRead0(ChannelHandlerContext chc, Command msg) throws Exception {
-        coder.decodeCmd(msg);
+        executeChannel.Put(msg);
     }
 
     @Override
