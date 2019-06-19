@@ -70,7 +70,6 @@ public class ClientMain {
                         System.out.println("Thread " + threadString + "请求结果 => null");
                         continue;
                     }
-                    System.out.println("Thread " + threadString + " => " + req.getA() + "*" + req.getB() + " = " + rep.getC());
                     if (req.getA() * req.getB() != result) {
                         System.out.println("Thread " + threadString + " => " + req.getA() + "*" + req.getB() + " = " + rep.getC());
                         integer.incrementAndGet();
