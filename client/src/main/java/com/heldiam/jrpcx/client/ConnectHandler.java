@@ -22,10 +22,12 @@ public class ConnectHandler extends SimpleChannelInboundHandler<Command> impleme
 
     private static final Logger LOG = LoggerFactory.getLogger(ConnectHandler.class.getName());
 
+    public static int ConnectHandlerThread = 10;
+
     /**
      * 执行队列
      */
-    private QueueChannel<Command> executeChannel = new QueueChannel(this);
+    private QueueChannel<Command> executeChannel = new QueueChannel(this, ConnectHandlerThread);
 
     /**
      * 关闭
