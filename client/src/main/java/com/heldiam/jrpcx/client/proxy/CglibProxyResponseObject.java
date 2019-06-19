@@ -1,7 +1,8 @@
 package com.heldiam.jrpcx.client.proxy;
 
-import com.heldiam.jrpcx.core.common.Feature;
-import com.heldiam.jrpcx.core.common.FeaturePool;
+import com.heldiam.jrpcx.client.Feature;
+import com.heldiam.jrpcx.client.FeaturePool;
+import com.heldiam.jrpcx.client.MetaData;
 import net.sf.cglib.beans.BeanGenerator;
 import net.sf.cglib.beans.BeanMap;
 import net.sf.cglib.proxy.Enhancer;
@@ -19,18 +20,29 @@ import java.util.List;
  */
 class CglibProxyResponseObject implements MethodInterceptor {
 
-    private static final List<String> ignoreMethodName = Arrays.asList("setRetObject", "getFeature", "setFeature", "getDone", "setDone");
+    private static final List<String> ignoreMethodName = Arrays.asList(
+            "setRetObject",
+            "setMetaData", "getMetaData",
+            "getFeature", "setFeature",
+            "getDone", "setDone");
 
     @Override
     public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
         if (ignoreMethodName.contains(method.getName())) {
             return proxy.invokeSuper(obj, args);
         }
+        //代理的类
+        String proxyClasssName = obj.getClass().getSuperclass().getSuperclass().getName();
+        //方法执行类
+        String proxyMethodClassName = method.getDeclaringClass().getName();
+        if (proxyClasssName != proxyMethodClassName) { //如果不是代理类的方法,忽略直接执行
+            return proxy.invokeSuper(obj, args);
+        }
         isDone(obj); //等待对象设置结束了才能进行下一步操作
         return proxy.invokeSuper(obj, args);
     }
 
-    public <T> T getbean(Class<T> cls) {
+    public BeanMap getbean(Class cls) {
         BeanGenerator generator = new BeanGenerator();
         generator.setSuperclass(cls);
         generator.addProperty("feature", Feature.class);
@@ -45,17 +57,16 @@ class CglibProxyResponseObject implements MethodInterceptor {
         f.setRetClass(cls);
         beanMap.put("feature", f);
         beanMap.put("done", false);
-        return (T) beanMap.getBean();
+        return beanMap;
     }
 
     /**
      * 获取feature
      *
-     * @param obj
+     * @param beanMap
      * @return
      */
-    Feature getFeature(Object obj) {
-        BeanMap beanMap = BeanMap.create(obj);
+    Feature getFeature(BeanMap beanMap) {
         return (Feature) beanMap.get("feature");
     }
 
@@ -71,9 +82,12 @@ class CglibProxyResponseObject implements MethodInterceptor {
         if (!ret) {
             Feature f = (Feature) beanMap.get("feature");
             try {
-                f.Done();
-                FeaturePool.cloneObj(f.getRetObject(),obj);
-            } catch (RuntimeException ex) {
+                Object result = f.Done();
+                FeaturePool.cloneObj(result, obj);
+                if (obj instanceof MetaData) {
+                    ((MetaData) obj).setMetaData(f.getMetaData());
+                }
+            } catch (Exception ex) {
                 throw ex;
             } finally {
                 beanMap.put("done", true);

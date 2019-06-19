@@ -2,7 +2,7 @@
  * @Date @Time.
  * @Author kinwyb<kinwyb@aliyun.com>
  */
-package com.heldiam.jrpcx.core.common;
+package com.heldiam.jrpcx.client;
 
 import org.slf4j.LoggerFactory;
 
@@ -25,12 +25,11 @@ public class FeaturePool {
 
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(FeaturePool.class.getName());
 
-
     public static synchronized Feature get() {
-//        if (POOL.size() > 0) {
-//            return POOL.removeFirst();
-//        }
-        // todo: 对象池
+        if (POOL.size() > 0) {
+            Feature f = POOL.removeLast();
+            return f;
+        }
         return new Feature();
     }
 
@@ -67,7 +66,6 @@ public class FeaturePool {
             LOG.error("对象属性拷贝异常:" + e.getMessage(), e);
         }
     }
-
 
     private final static ConcurrentHashMap<String, Feature> useFeatureMap = new ConcurrentHashMap<>();
 

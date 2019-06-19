@@ -2,7 +2,8 @@ package com.heldiam.jrpcx.client.proxy;
 
 
 import com.heldiam.jrpcx.client.Client;
-import com.heldiam.jrpcx.core.common.Feature;
+import com.heldiam.jrpcx.client.Feature;
+import net.sf.cglib.beans.BeanMap;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
@@ -25,22 +26,17 @@ class CglibProxy implements MethodInterceptor {
     @Override
     public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
         String methodName = method.getName();
-        String className = method.getDeclaringClass().getName();
-        className = className.substring(className.lastIndexOf(".")).replaceAll("\\.", "");
+        String serviceName = method.getDeclaringClass().getName();
+        serviceName = serviceName.substring(serviceName.lastIndexOf(".")).replaceAll("\\.", "");
         Class cls = method.getReturnType();
-        Object ret = cgResp.getbean(cls);
+        BeanMap ret = cgResp.getbean(cls);
         Feature feature = cgResp.getFeature(ret);
-        try {
-            if (args.length > 0) {
-                client.Call(className, methodName, args[0], feature);
-            } else {
-                client.Call(className, methodName, null, feature);
-            }
-        } catch (Exception ex) {
-            feature.setException(ex);
-            feature.setResult(null);
+        Object params = null;
+        if (args.length > 0) {
+            params = args[0];
         }
-        return ret;
+        feature.Call(client, serviceName, methodName, params);
+        return ret.getBean();
     }
 
 }

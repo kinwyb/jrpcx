@@ -5,8 +5,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.VisibilityChecker;
+import com.heldiam.jrpcx.core.codec.CoderException;
 import com.heldiam.jrpcx.core.codec.ICodec;
-import com.heldiam.jrpcx.core.common.RpcException;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
 
 import java.io.IOException;
@@ -29,20 +29,20 @@ public class MsgPack implements ICodec {
     }
 
     @Override
-    public Object decode(byte[] data, Class retType) throws RpcException {
+    public Object decode(byte[] data, Class retType) throws CoderException {
         try {
             return toObject(data, retType);
         } catch (Exception ex) {
-            throw new RpcException("MsgPack解码失败");
+            throw new CoderException("MsgPack解码失败");
         }
     }
 
     @Override
-    public byte[] encode(Object params) throws RpcException {
+    public byte[] encode(Object params) throws CoderException {
         try {
             return toBytes(params);
         } catch (Exception e) {
-            throw new RpcException("MsgPack编码失败");
+            throw new CoderException("MsgPack编码失败");
         }
     }
 

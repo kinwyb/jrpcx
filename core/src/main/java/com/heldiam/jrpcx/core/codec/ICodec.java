@@ -1,14 +1,7 @@
-/*
- * @Date @Time.
- * @Author kinwyb<kinwyb@aliyun.com>
- */
 package com.heldiam.jrpcx.core.codec;
 
 
-import com.heldiam.jrpcx.core.common.Feature;
 import com.heldiam.jrpcx.core.common.RpcException;
-import com.heldiam.jrpcx.core.protocol.Command;
-import com.heldiam.jrpcx.core.protocol.SerializeType;
 
 /**
  * Codec数据解析接口
@@ -23,7 +16,7 @@ public interface ICodec {
      *
      * @return
      */
-    Object decode(byte[] data, Class retType) throws RpcException;
+    Object decode(byte[] data, Class retType) throws CoderException;
 
     /**
      * 编码
@@ -32,6 +25,6 @@ public interface ICodec {
      * @return
      * @throws RpcException
      */
-    byte[] encode(Object params) throws RpcException;
+    byte[] encode(Object params) throws CoderException;
 
 }

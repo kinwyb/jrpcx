@@ -24,12 +24,9 @@ public class ConnectHandler extends SimpleChannelInboundHandler<Command> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConnectHandler.class.getName());
 
-    private EventLoopGroup workerGroup;
-    private ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
-
-    ConnectHandler() {
-        workerGroup = new NioEventLoopGroup();
-    }
+    private final EventLoopGroup workerGroup = new NioEventLoopGroup();
+    private final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
+    private final Coder coder = new Coder();
 
     /**
      * 关闭
@@ -50,22 +47,15 @@ public class ConnectHandler extends SimpleChannelInboundHandler<Command> {
         workerGroup.execute(() -> {
             Command cmd;
             try {
-                msg.getMessage().decode(msg.getData()); //解码信息
-                LOG.debug(msg.getMessage().getSeq() + "收到服务请求:" + msg.getMessage().servicePath + "." + msg.getMessage().serviceMethod);
-                ICodec codec = Coder.getCodec(msg.getMessage().getSerializeType().value());
-                if (codec == null) {
+                ICodec codec = coder.decodeCmd(msg);
+                try {
+                    Object resp = Service.ServiceInvoke(msg.getMessage(), codec);
                     cmd = msg.requestToResponse();
-                    cmd.setErrorMessage("Codec", "解码器不存在");
-                } else {
-                    try {
-                        Object resp = Service.ServiceInvoke(msg.getMessage(), codec);
-                        cmd = msg.requestToResponse();
-                        cmd.getMessage().payload = codec.encode(resp);
-                    } catch (Exception ex) {
-                        LOG.error("服务调用异常:" + ex.getMessage(), ex);
-                        cmd = msg.requestToResponse();
-                        cmd.setErrorMessage("服务异常", ex.getMessage());
-                    }
+                    cmd.getMessage().payload = codec.encode(resp);
+                } catch (Exception ex) {
+                    LOG.error("服务调用异常:" + ex.getMessage(), ex);
+                    cmd = msg.requestToResponse();
+                    cmd.setErrorMessage("服务异常", ex.getMessage());
                 }
                 LOG.debug(msg.getMessage().getSeq() + "服务处理完成了");
             } catch (Exception ex) {

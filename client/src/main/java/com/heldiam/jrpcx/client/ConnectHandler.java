@@ -1,9 +1,11 @@
 package com.heldiam.jrpcx.client;
 
 import com.heldiam.jrpcx.core.codec.Coder;
-import com.heldiam.jrpcx.core.common.QueueChannel;
-import com.heldiam.jrpcx.core.common.RpcException;
+import com.heldiam.jrpcx.core.codec.ICodec;
+import com.heldiam.jrpcx.core.common.*;
 import com.heldiam.jrpcx.core.protocol.Command;
+import com.heldiam.jrpcx.core.protocol.Message;
+import com.heldiam.jrpcx.core.protocol.MessageStatusType;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -16,26 +18,14 @@ import org.slf4j.LoggerFactory;
  * @author heldiam
  */
 @Sharable
-public class ConnectHandler extends SimpleChannelInboundHandler<Command> {
+public class ConnectHandler extends SimpleChannelInboundHandler<Command> implements QueueChannel.QueueChannelRun<Command> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConnectHandler.class.getName());
-
-    public final Coder coder = new Coder();
 
     /**
      * 执行队列
      */
-    private QueueChannel<Command> executeChannel = new QueueChannel<>();
-
-    public ConnectHandler() {
-        executeChannel.SubmitRun((r) -> {
-            try {
-                coder.decodeCmd(r);
-            } catch (RpcException e) {
-                LOG.error(e.getMessage(), e);
-            }
-        });
-    }
+    private QueueChannel<Command> executeChannel = new QueueChannel(this);
 
     /**
      * 关闭
@@ -61,4 +51,32 @@ public class ConnectHandler extends SimpleChannelInboundHandler<Command> {
         LOG.error("连接异常", cause);
     }
 
+    @Override
+    public void Run(Command cmd) {
+        try {
+            ICodec codec = Coder.decodeCmd(cmd);
+            Message msg = cmd.getMessage();
+            String id = String.valueOf(msg.getSeq());
+            Feature f = FeaturePool.GetUseFeature(id);
+            if (f == null) {
+//                LOG.error("未知请求[" + id + "]结果");
+                return;
+            }
+            f.setMetaData(msg.getMetadata());
+            if (msg.getMessageStatusType() == MessageStatusType.Error) {
+                f.setException(new RpcException("服务调用失败:" + msg.getMetadata().get(Constants.RPCX_ERROR_MESSAGE)));
+                f.setResult(null);
+                return;
+            }
+            try {
+                Object obj = codec.decode(msg.payload, f.getRetClass());
+                f.setResult(obj);
+            } catch (Exception ex) {
+                f.setException(ex);
+                f.setResult(null);
+            }
+        } catch (RpcException e) {
+            LOG.error(e.getMessage(), e);
+        }
+    }
 }

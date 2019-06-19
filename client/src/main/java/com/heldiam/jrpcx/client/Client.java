@@ -1,8 +1,9 @@
 package com.heldiam.jrpcx.client;
 
+import com.heldiam.jrpcx.client.failMode.FailModeEnum;
 import com.heldiam.jrpcx.client.proxy.Proxy;
 import com.heldiam.jrpcx.client.selector.Selector;
-import com.heldiam.jrpcx.core.common.Feature;
+import com.heldiam.jrpcx.core.codec.Coder;
 import com.heldiam.jrpcx.core.common.RpcException;
 import com.heldiam.jrpcx.core.common.URL;
 import com.heldiam.jrpcx.core.discovery.IDiscovery;
@@ -20,9 +21,6 @@ import java.util.LinkedList;
  **/
 public class Client {
 
-    //连接的服务器地址标记
-    private URL addressURL;
-
     /**
      * 负载均衡选择器
      */
@@ -32,8 +30,6 @@ public class Client {
      * 连接对象
      */
     private final Connect connect = new Connect();
-
-    private Channel channel;
 
     private IDiscovery discovery;
 
@@ -47,6 +43,11 @@ public class Client {
      */
     private Proxy proxy;
 
+    /**
+     * 失败重试模式
+     */
+    private FailModeEnum failMode = FailModeEnum.Failtry;
+
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(Client.class.getName());
 
     public Client(Selector selector, @NotNull IDiscovery discovery) {
@@ -56,8 +57,8 @@ public class Client {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> this.Close()));
     }
 
-    Channel getConnect(String serviceName, LinkedList<String> ignoreAddress) throws RpcException {
-        URL address = this.addressURL;
+    Channel getConnect(String serviceName, @NotNull LinkedList<String> ignoreAddress) throws RpcException {
+        URL address = null;
         for (int i = 0; i < 10; i++) { //选取地址,10次选不出来就提示无有效服务地址
             address = selector.GetAddress(serviceName);
             if (address == null) {
@@ -74,39 +75,27 @@ public class Client {
             LOG.error("无有效的服务地址");
             throw new RpcException("无有效的服务地址");
         }
+        ignoreAddress.add(address.toString()); //当前地址加入忽略列表,已便失败重试时可以选择新地址
         Channel channel = connect.doConnect(address);
         if (channel == null) {
-            if (ignoreAddress == null) {
-                ignoreAddress = new LinkedList<>();
-            }
-            ignoreAddress.add(address.toString());
             return getConnect(serviceName, ignoreAddress);
         }
-        this.addressURL = address;
-        this.channel = channel;
         return channel;
     }
 
-    public void Call(String service,
-                     String method,
-                     Object param,
-                     Feature feature) throws RpcException {
-        try {
-            getConnect(service, null);
-        } catch (RpcException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            throw new RpcException(ex);
-        }
+    /**
+     * 远程调用
+     *
+     * @param feature 请求对象
+     * @return 当前调用服务地址
+     * @throws RpcException
+     */
+    public void Call(Feature feature) throws RpcException {
+        Channel channel = getConnect(feature.seviceName, feature.ignoreAddress);
 //        LOG.debug("请求服务地址:" + channel.remoteAddress());
-        Command data;
-        try {
-            data = connect.getHandler().coder.getRequest(service, method, param, serializeType, feature);
-        } catch (Exception ex) {
-            LOG.debug("消息序列化失败[" + ex.getMessage() + "]");
-            throw new RpcException("消息序列化失败[" + ex.getMessage() + "]", ex, "Codec");
-        }
-        this.channel.writeAndFlush(data).addListener(f -> {
+        Command data = Coder.getRequest(feature.seviceName, feature.methodName,
+                feature.params, serializeType, feature.seq);
+        channel.writeAndFlush(data).addListener(f -> {
             if (!f.isSuccess()) {
                 LOG.debug("服务请求发送失败");
             }
@@ -141,5 +130,25 @@ public class Client {
 
     public void setDiscovery(IDiscovery discovery) {
         this.discovery = discovery;
+    }
+
+    /**
+     * 设在失败模式
+     *
+     * @param failMode
+     * @return
+     */
+    public Client setFailMode(FailModeEnum failMode) {
+        this.failMode = failMode;
+        return this;
+    }
+
+    /**
+     * 获取失败模式
+     *
+     * @return
+     */
+    public FailModeEnum getFailMode() {
+        return failMode;
     }
 }

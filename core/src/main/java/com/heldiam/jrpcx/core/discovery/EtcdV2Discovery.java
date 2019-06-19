@@ -47,7 +47,6 @@ public class EtcdV2Discovery extends BaseDiscovery {
         if (shutdown) {
             return;
         }
-        LOG.debug("开启etcd变动监听");
         try {
             client.getDir(getBasePath()).recursive().waitForChange()
                     .consistent().send().addListener(promisea -> {
@@ -60,10 +59,9 @@ public class EtcdV2Discovery extends BaseDiscovery {
                         case expire:
                             del = true;
                     }
-                    LOG.debug(response.action.name() + " => " + response.node.key);
                     parseEtcdNode(response.node, del);
                 } catch (Exception e) {
-                    LOG.error("etcd监听异常:" + e.getMessage(), e);
+                    LOG.warn("etcd监听异常:" + e.getMessage());
                 }
                 new Thread(() -> etcdWatch()).start();
             });

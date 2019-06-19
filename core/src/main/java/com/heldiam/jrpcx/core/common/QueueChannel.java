@@ -19,7 +19,34 @@ public class QueueChannel<T> {
     private final LinkedBlockingQueue<T> queue = new LinkedBlockingQueue<>();
     private static final Logger LOG = LoggerFactory.getLogger(QueueChannel.class);
     private boolean shutdown = false;
-    private EventLoopGroup group = new NioEventLoopGroup();
+    private final EventLoopGroup group = new NioEventLoopGroup();
+
+    /**
+     * 系统处理队列
+     *
+     * @param run         处理方式
+     * @param executeSize 处理线程数
+     */
+    public QueueChannel(QueueChannelRun<T> run, int executeSize) {
+        for (int i = 0; i < executeSize; i++) {
+            group.execute(new execute(this, run));
+        }
+    }
+
+    /**
+     * 系统处理队列
+     */
+    public QueueChannel() {
+    }
+
+    /**
+     * 系统处理队列
+     *
+     * @param run 处理方式
+     */
+    public QueueChannel(QueueChannelRun<T> run) {
+        group.execute(new execute(this, run));
+    }
 
 
     public void Put(T data) throws InterruptedException {
