@@ -57,12 +57,11 @@ public class ConnectHandler extends SimpleChannelInboundHandler<Command> {
                     cmd = msg.requestToResponse();
                     cmd.setErrorMessage("服务异常", ex.getMessage());
                 }
-                LOG.debug(msg.getMessage().getSeq() + "服务处理完成了");
             } catch (Exception ex) {
                 cmd = msg.requestToResponse();
                 cmd.setErrorMessage("服务异常", ex.getMessage());
             }
-            if (cmd != null && chc.channel().isActive()) {
+            if (cmd != null && !cmd.isOnewayRPC() && chc.channel().isActive()) {
                 chc.writeAndFlush(cmd); //写入返回
             }
         });

@@ -49,7 +49,9 @@ public class Feature {
         this.methodName = methodName;
         this.params = params;
         this.seq = seqAtomic.incrementAndGet();
-        FeaturePool.AddUseFeature(String.valueOf(seq), this);
+        if (retClass != null) { //有返回值的保存请求等待返回结果
+            FeaturePool.AddUseFeature(String.valueOf(seq), this);
+        }
         Call();
     }
 
@@ -59,6 +61,19 @@ public class Feature {
 
     public Map<String, String> getMetaData() {
         return metaData;
+    }
+
+    /**
+     * 获取返回结果
+     *
+     * @return
+     * @throws Exception
+     */
+    public Object getRetObject() throws Exception {
+        Done();
+        Object ret = retObject;
+        Close(); //返回当前对象
+        return ret;
     }
 
     /**

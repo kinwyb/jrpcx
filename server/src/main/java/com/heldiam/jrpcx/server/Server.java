@@ -42,7 +42,7 @@ public class Server {
      * 连接服务器
      */
     public void Start() {
-        LOG.debug("RPCX服务启动中...");
+        LOG.info("RPCX服务启动中...");
         registerService(); //注册服务
         try {
             handler = new ConnectHandler();
@@ -61,7 +61,7 @@ public class Server {
                 });
                 //Binds Server, waits for Server to close, and releases resources
                 ChannelFuture f = b.bind(remote).sync();
-                LOG.debug("RPCX服务监听启动: " + f.channel().localAddress());
+                LOG.info("RPCX服务监听启动: " + f.channel().localAddress());
                 this.channel = f.channel();
                 this.channel.closeFuture().sync();
             } finally {
@@ -109,7 +109,7 @@ public class Server {
      * 关闭
      */
     public void Close() {
-        System.out.println("RPCX Server 关闭");
+        LOG.info("RPCX 服务关闭");
         if (handler != null) {
             handler.Close(); //关闭handler
             handler = null;

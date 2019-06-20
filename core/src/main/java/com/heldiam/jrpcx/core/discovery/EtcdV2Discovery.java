@@ -141,6 +141,12 @@ public class EtcdV2Discovery extends BaseDiscovery {
         }
     }
 
+    @Override
+    public void RegisterWatch(IDiscoveryWatch watch) {
+        super.RegisterWatch(watch);
+        watch.ServiceChange(serviceMap);
+    }
+
     /**
      * 或略Not a file错误
      *

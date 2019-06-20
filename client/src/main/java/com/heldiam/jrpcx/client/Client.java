@@ -95,9 +95,10 @@ public class Client {
 //        LOG.debug("请求服务地址:" + channel.remoteAddress());
         Command data = Coder.getRequest(feature.seviceName, feature.methodName,
                 feature.params, serializeType, feature.seq);
+        data.getMessage().setOneway(feature.getRetClass() == null); //有无返回值
         channel.writeAndFlush(data).addListener(f -> {
             if (!f.isSuccess()) {
-                LOG.debug("服务请求发送失败");
+                throw new RpcException("请求发送失败");
             }
         });
     }
