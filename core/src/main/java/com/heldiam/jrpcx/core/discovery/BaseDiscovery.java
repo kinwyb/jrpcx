@@ -33,6 +33,7 @@ abstract class BaseDiscovery implements IDiscovery, IDiscoveryWatch {
      *
      * @param basePath
      */
+    @Override
     public void setBasePath(String basePath) {
         BasePath = basePath;
     }
@@ -74,4 +75,5 @@ abstract class BaseDiscovery implements IDiscovery, IDiscoveryWatch {
     public void RemoveService(String serviceName, String serverAddress) {
         watchList.forEach((w) -> w.RemoveService(serviceName, serverAddress));
     }
+
 }

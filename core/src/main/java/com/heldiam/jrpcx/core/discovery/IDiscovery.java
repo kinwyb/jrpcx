@@ -36,6 +36,12 @@ public interface IDiscovery {
     void Close();
 
     /**
+     * 基础路径
+     * @param basePath
+     */
+    void setBasePath(String basePath);
+
+    /**
      * 注册服务
      *
      * @param serviceName

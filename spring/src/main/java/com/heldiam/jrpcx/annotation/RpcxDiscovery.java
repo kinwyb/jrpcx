@@ -23,6 +23,12 @@ public @interface RpcxDiscovery {
     String[] value() default {"127.0.0.1:8972"};
 
     /**
+     * 默认路径
+     * @return
+     */
+    String basePath() default "rpcx";
+
+    /**
      * 实现类
      *
      * @return

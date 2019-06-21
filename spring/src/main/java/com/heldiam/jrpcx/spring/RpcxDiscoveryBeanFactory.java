@@ -42,7 +42,9 @@ public class RpcxDiscoveryBeanFactory implements FactoryBean<IDiscovery> {
     @Override
     public IDiscovery getObject() throws Exception {
         Constructor cs = discovery.cls().getDeclaredConstructor(String[].class);
-        return (IDiscovery) cs.newInstance(new Object[]{discovery.value()});
+        IDiscovery ret = (IDiscovery) cs.newInstance(new Object[]{discovery.value()});
+        ret.setBasePath(discovery.basePath());
+        return ret;
 //        Enhancer enhancer = new Enhancer();
 //        enhancer.setSuperclass(discovery.cls());
 //        enhancer.setNamingPolicy(SpringNamingPolicy.INSTANCE);

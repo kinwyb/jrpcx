@@ -3,6 +3,7 @@ package com.heldiam.jrpcx.examples.client;
 import com.heldiam.jrpcx.client.Client;
 import com.heldiam.jrpcx.client.failMode.FailModeEnum;
 import com.heldiam.jrpcx.client.selector.Selector;
+import com.heldiam.jrpcx.core.discovery.EtcdV2Discovery;
 import com.heldiam.jrpcx.core.discovery.SimpleDiscovery;
 import com.heldiam.jrpcx.examples.exampleData.Arith;
 import com.heldiam.jrpcx.examples.exampleData.ArithMulRequest;
@@ -26,8 +27,8 @@ public class ClientMain {
 
     public static void main(String[] args) throws Exception {
         BasicConfigurator.configure();
-//        EtcdV2Discovery discovery = new EtcdV2Discovery("118.31.188.131:2379");
-//        discovery.setBasePath("/jrpcx");
+        EtcdV2Discovery discovery = new EtcdV2Discovery("118.31.188.131:2379");
+        discovery.setBasePath("/jrpcx");
         Client client = Selector.WeightedRountRobin(new SimpleDiscovery("127.0.0.1:8972")).buildClient().setFailMode(FailModeEnum.Failbackup);
         Arith arith = client.Proxy(Arith.class);
         EventLoopGroup loopGroup = new NioEventLoopGroup();
