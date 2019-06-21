@@ -9,26 +9,39 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>jrpcx-examples</artifactId>
+    <artifactId>jrpcx-spring</artifactId>
 
     <dependencies>
+        <!-- https://mvnrepository.com/artifact/org.springframework/spring-core -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+            <version>4.3.3.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>4.3.3.RELEASE</version>
+        </dependency>
         <dependency>
             <groupId>com.heldiam</groupId>
-            <artifactId>jrpcx-client</artifactId>
-            <version>${reversion}</version>
+            <artifactId>jrpcx-core</artifactId>
+            <version>0.0.1</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.heldiam</groupId>
             <artifactId>jrpcx-server</artifactId>
-            <version>${reversion}</version>
+            <version>0.0.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.heldiam</groupId>
-            <artifactId>jrpcx-spring</artifactId>
+            <artifactId>jrpcx-client</artifactId>
             <version>0.0.1</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
+
 
 </project>

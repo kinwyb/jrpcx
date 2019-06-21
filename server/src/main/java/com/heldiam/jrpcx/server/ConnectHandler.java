@@ -78,8 +78,8 @@ public class ConnectHandler extends SimpleChannelInboundHandler<Command> {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        LOG.error("连接异常", cause);
         super.exceptionCaught(ctx, cause);
+        LOG.error("连接异常" + cause.getMessage());
         channels.remove(ctx.channel());
         ctx.channel().close();
         ctx.close();

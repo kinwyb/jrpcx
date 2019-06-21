@@ -21,6 +21,7 @@
         <module>examples</module>
         <module>server</module>
         <module>benchmark</module>
+        <module>spring</module>
     </modules>
 
     <dependencies>

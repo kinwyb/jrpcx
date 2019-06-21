@@ -27,6 +27,7 @@ public class Server {
     private final SocketAddress remote;
     private final String address;
     private static final Logger LOG = LoggerFactory.getLogger(Server.class.getName());
+    EventLoopGroup group;
     private ConnectHandler handler;
     private Channel channel;
     private IDiscovery discovery;
@@ -46,28 +47,25 @@ public class Server {
         registerService(); //注册服务
         try {
             handler = new ConnectHandler();
-            EventLoopGroup group = new NioEventLoopGroup();
-            try {
-                //create ServerBootstrap instance
-                ServerBootstrap b = new ServerBootstrap();
-                b.group(group).channel(NioServerSocketChannel.class);
-                b.childHandler(new ChannelInitializer<Channel>() {
-                    @Override
-                    protected void initChannel(Channel ch) throws Exception {
-                        ch.pipeline().addLast(new NettyDecoder());
-                        ch.pipeline().addLast(new NettyEncoder());
-                        ch.pipeline().addLast(handler);
-                    }
-                });
-                //Binds Server, waits for Server to close, and releases resources
-                ChannelFuture f = b.bind(remote).sync();
-                LOG.info("RPCX服务监听启动: " + f.channel().localAddress());
-                this.channel = f.channel();
-                this.channel.closeFuture().sync();
-            } finally {
-                unRegisterService();
-                group.shutdownGracefully().sync();
+            if (group != null) {
+                group.shutdownGracefully();
             }
+            group = new NioEventLoopGroup();
+            //create ServerBootstrap instance
+            ServerBootstrap b = new ServerBootstrap();
+            b.group(group).channel(NioServerSocketChannel.class);
+            b.childHandler(new ChannelInitializer<Channel>() {
+                @Override
+                protected void initChannel(Channel ch) throws Exception {
+                    ch.pipeline().addLast(new NettyDecoder());
+                    ch.pipeline().addLast(new NettyEncoder());
+                    ch.pipeline().addLast(handler);
+                }
+            });
+            //Binds Server, waits for Server to close, and releases resources
+            ChannelFuture f = b.bind(remote).sync();
+            LOG.info("RPCX服务监听启动: " + f.channel().localAddress());
+            this.channel = f.channel();
         } catch (Exception e) {
             LOG.error("RPCX服务监听失败", e);
         }
@@ -119,6 +117,9 @@ public class Server {
             channel.disconnect();
             channel.close();
             channel = null;
+        }
+        if (group != null) {
+            group.shutdownGracefully().awaitUninterruptibly();
         }
         unRegisterService();
     }

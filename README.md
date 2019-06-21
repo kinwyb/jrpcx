@@ -11,6 +11,7 @@ rpcx的原生java端
 > * 服务超时
 > * 失败重试
 > * 支持元数据(使用方法结果类继承MetaData)
+> * 支持spring注解
 
 
 #使用方法
@@ -134,6 +135,30 @@ public class ClientMain {
             Thread.sleep(1000);
         }
         client.Close();
+    }
+
+}
+```
+
+### Spring注解支持
+
+详情查看examples/spring
+
+```
+@ComponentScan(value = {"com.heldiam"})
+@RpcxDiscovery //开启注册中心(必须)
+@RpcxServer //开启服务
+//@RpcxClient //开启客户端
+public class Main {
+
+    public static void main(String[] args) {
+        BasicConfigurator.configure();
+        AnnotationConfigApplicationContext annotationConfigApplicationContext = new AnnotationConfigApplicationContext();
+        annotationConfigApplicationContext.register(Main.class);
+        annotationConfigApplicationContext.refresh();
+        SimpleComponent component = annotationConfigApplicationContext.getBean(SimpleComponent.class);
+        System.out.println(component.getData());
+        annotationConfigApplicationContext.close();
     }
 
 }
