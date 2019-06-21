@@ -100,7 +100,7 @@ public class ServerMain {
             return response;
         };
         Service.registerService(arith, Arith.class);
-        EtcdV2Discovery discovery = new EtcdV2Discovery("118.31.188.131:2379");
+        EtcdV2Discovery discovery = new EtcdV2Discovery("127.0.0.1:2379");
         discovery.setBasePath("/jrpcx");
         Server server = new Server("127.0.0.1:8972", discovery);
         new Thread(() -> server.Start()).run();
@@ -122,7 +122,7 @@ public class ClientMain {
 
     public static void main(String[] args) throws Exception {
         BasicConfigurator.configure();
-        EtcdV2Discovery discovery = new EtcdV2Discovery("118.31.188.131:2379");
+        EtcdV2Discovery discovery = new EtcdV2Discovery("127.0.0.1:2379");
         discovery.setBasePath("/jrpcx");
         Client client = Selector.WeightedRountRobin(discovery).buildClient();
         Arith arith = client.Proxy(Arith.class);
