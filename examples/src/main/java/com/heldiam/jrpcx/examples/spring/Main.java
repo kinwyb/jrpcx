@@ -1,5 +1,6 @@
 package com.heldiam.jrpcx.examples.spring;
 
+import com.heldiam.jrpcx.annotation.RpcxClient;
 import com.heldiam.jrpcx.annotation.RpcxDiscovery;
 import com.heldiam.jrpcx.annotation.RpcxServer;
 import org.apache.log4j.BasicConfigurator;
@@ -13,7 +14,7 @@ import org.springframework.context.annotation.ComponentScan;
 @ComponentScan(value = {"com.heldiam"})
 @RpcxDiscovery //开启注册中心(必须)
 @RpcxServer //开启服务
-//@RpcxClient //开启客户端
+@RpcxClient //开启客户端
 public class Main {
 
     public static void main(String[] args) {

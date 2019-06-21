@@ -91,7 +91,7 @@ class Connect {
     }
 
     private void channelClose(Channel channel) {
-        if (channel != null) {
+        if (channel != null && channel.isActive()) {
             channel.flush();
             channel.disconnect();
             channel.deregister();
