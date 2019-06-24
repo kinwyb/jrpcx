@@ -1,8 +1,10 @@
 package com.heldiam.jrpcx.core.discovery;
 
 import com.heldiam.jrpcx.core.common.RpcException;
+import com.heldiam.jrpcx.core.common.StringUtils;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +20,8 @@ abstract class BaseDiscovery implements IDiscovery, IDiscoveryWatch {
     private String BasePath = "rpcx";
 
     private List<IDiscoveryWatch> watchList = new LinkedList<>();
+
+    protected Map<String, List<String>> serviceMap = new HashMap<>();
 
     /**
      * 基本路径
@@ -74,6 +78,39 @@ abstract class BaseDiscovery implements IDiscovery, IDiscoveryWatch {
     @Override
     public void RemoveService(String serviceName, String serverAddress) {
         watchList.forEach((w) -> w.RemoveService(serviceName, serverAddress));
+    }
+
+    /**
+     * 解析注册中心路径为服务
+     *
+     * @param path
+     * @param del
+     */
+    protected void parseNodePathToService(String path, boolean del) {
+        String servicePath = path.substring(getBasePath().length());
+        servicePath = StringUtils.trimString(servicePath, "/");
+        int lastIndex = servicePath.lastIndexOf("/");
+        if (lastIndex >= servicePath.length()) {
+            return;
+        }
+        String serviceName = servicePath.substring(0, lastIndex);
+        String serviceAddr = servicePath.substring(lastIndex + 1);
+        List<String> serviceAddrList = serviceMap.get(serviceName);
+        if (serviceAddrList == null) {
+            serviceAddrList = new LinkedList<>();
+            serviceMap.put(serviceName, serviceAddrList);
+        }
+        if (del) {
+            LOG.debug("移除服务:" + serviceName + " => " + serviceAddr);
+            serviceAddrList.remove(serviceAddr);
+            RemoveService(serviceName, serviceAddr);
+            return;
+        } else if (serviceAddrList.contains(serviceAddr)) { //已经存在的忽略
+            return;
+        }
+        LOG.debug("发现服务:" + serviceName + " => " + serviceAddr);
+        serviceAddrList.add(serviceAddr);
+        ServiceChange(serviceMap);
     }
 
 }

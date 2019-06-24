@@ -1,6 +1,6 @@
 package com.heldiam.jrpcx.examples.server;
 
-import com.heldiam.jrpcx.core.discovery.EtcdV2Discovery;
+import com.heldiam.jrpcx.core.discovery.ZookeeperDiscovery;
 import com.heldiam.jrpcx.examples.exampleData.Arith;
 import com.heldiam.jrpcx.examples.exampleData.ArithMulResponse;
 import com.heldiam.jrpcx.server.Server;
@@ -30,7 +30,8 @@ public class ServerMain {
             return response;
         };
         Service.registerService(arith, Arith.class);
-        EtcdV2Discovery discovery = new EtcdV2Discovery("118.31.188.131:2379");
+//        EtcdV2Discovery discovery = new EtcdV2Discovery("118.31.188.131:2379");
+        ZookeeperDiscovery discovery = new ZookeeperDiscovery("192.168.25.100:2181");
         discovery.setBasePath("/jrpcx");
         Server server = new Server("127.0.0.1:8972", discovery);
 //        new Thread(() -> server.Start()).run();

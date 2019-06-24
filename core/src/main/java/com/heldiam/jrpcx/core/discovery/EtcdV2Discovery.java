@@ -1,7 +1,6 @@
 package com.heldiam.jrpcx.core.discovery;
 
 import com.heldiam.jrpcx.core.common.RpcException;
-import com.heldiam.jrpcx.core.common.StringUtils;
 import mousio.etcd4j.EtcdClient;
 import mousio.etcd4j.requests.EtcdKeyPutRequest;
 import mousio.etcd4j.responses.EtcdException;
@@ -92,30 +91,7 @@ public class EtcdV2Discovery extends BaseDiscovery {
             node.nodes.forEach((n) -> parseEtcdNode(n, del));
             return;
         }
-        String servicePath = node.key.substring(getBasePath().length());
-        servicePath = StringUtils.trimString(servicePath, "/");
-        int lastIndex = servicePath.lastIndexOf("/");
-        if (lastIndex >= servicePath.length()) {
-            return;
-        }
-        String serviceName = servicePath.substring(0, lastIndex);
-        String serviceAddr = servicePath.substring(lastIndex + 1);
-        List<String> serviceAddrList = serviceMap.get(serviceName);
-        if (serviceAddrList == null) {
-            serviceAddrList = new LinkedList<>();
-            serviceMap.put(serviceName, serviceAddrList);
-        }
-        if (del) {
-            LOG.debug("移除服务:" + serviceName + " => " + serviceAddr);
-            serviceAddrList.remove(serviceAddr);
-            super.RemoveService(serviceName, serviceAddr);
-            return;
-        } else if (serviceAddrList.contains(serviceAddr)) { //已经存在的忽略
-            return;
-        }
-        LOG.debug("发现服务:" + serviceName + " => " + serviceAddr);
-        serviceAddrList.add(serviceAddr);
-        super.ServiceChange(serviceMap);
+        parseNodePathToService(node.key, del);
     }
 
     @Override

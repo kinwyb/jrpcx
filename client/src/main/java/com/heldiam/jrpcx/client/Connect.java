@@ -24,7 +24,7 @@ class Connect {
     static final EventLoopGroup GROUP = new NioEventLoopGroup();
     static final Bootstrap BOOT = new Bootstrap().group(GROUP).channel(NioSocketChannel.class);
 
-    private final int max_reconnect = 5;
+    private final int maxReconnect = 5; //最大重连次数
     private static final Logger LOG = LoggerFactory.getLogger(Connect.class.getName());
     private final ConnectHandler handler = new ConnectHandler();
     private Map<String, Channel> channelMap = new ConcurrentHashMap<>();
@@ -59,7 +59,7 @@ class Connect {
         while (true) {
             if (channel == null || !channel.isWritable()) {
                 LOG.debug("连接无效,准备重连");
-                if (reconnectNum > max_reconnect) {
+                if (reconnectNum > maxReconnect) {
                     LOG.warn("重连次数已达上限,更换服务器地址后再次连接");
                     channelMap.remove(remoteChannelKey);
                     return null;

@@ -2,10 +2,8 @@ package com.heldiam.jrpcx.core.discovery;
 
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 简单注册中心
@@ -18,7 +16,6 @@ public class SimpleDiscovery extends BaseDiscovery {
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(SimpleDiscovery.class.getName());
 
     private List<String> address = new LinkedList<>();
-    private Map<String, List<String>> serviceMap = new HashMap<>();
 
     @Override
     public List<String> getServices(String ServiceName) {

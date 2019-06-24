@@ -3,8 +3,7 @@ package com.heldiam.jrpcx.examples.client;
 import com.heldiam.jrpcx.client.Client;
 import com.heldiam.jrpcx.client.failMode.FailModeEnum;
 import com.heldiam.jrpcx.client.selector.Selector;
-import com.heldiam.jrpcx.core.discovery.EtcdV2Discovery;
-import com.heldiam.jrpcx.core.discovery.SimpleDiscovery;
+import com.heldiam.jrpcx.core.discovery.ZookeeperDiscovery;
 import com.heldiam.jrpcx.examples.exampleData.Arith;
 import com.heldiam.jrpcx.examples.exampleData.ArithMulRequest;
 import com.heldiam.jrpcx.examples.exampleData.ArithMulResponse;
@@ -27,9 +26,10 @@ public class ClientMain {
 
     public static void main(String[] args) throws Exception {
         BasicConfigurator.configure();
-        EtcdV2Discovery discovery = new EtcdV2Discovery("118.31.188.131:2379");
+//        EtcdV2Discovery discovery = new EtcdV2Discovery("118.31.188.131:2379");
+        ZookeeperDiscovery discovery = new ZookeeperDiscovery("192.168.25.100:2181");
         discovery.setBasePath("/jrpcx");
-        Client client = Selector.WeightedRountRobin(new SimpleDiscovery("127.0.0.1:8972")).buildClient().setFailMode(FailModeEnum.Failbackup);
+        Client client = Selector.WeightedRountRobin(discovery).buildClient().setFailMode(FailModeEnum.Failbackup);
         Arith arith = client.Proxy(Arith.class);
         EventLoopGroup loopGroup = new NioEventLoopGroup();
         loopGroup.execute(new ArithMul("1", arith));
@@ -66,15 +66,16 @@ public class ClientMain {
                 req.setB(ClientMain.random.nextInt(1000));
                 try {
                     ArithMulResponse rep = arith.Mul(req);
-//                    Integer result = rep.getC();
-//                    if (result == null) {
-//                        System.out.println("Thread " + threadString + "请求结果 => null");
-//                        continue;
-//                    }
-//                    if (req.getA() * req.getB() != result) {
-//                        System.out.println("Thread " + threadString + " => " + req.getA() + "*" + req.getB() + " = " + rep.getC());
-//                        integer.incrementAndGet();
-//                    }
+                    Integer result = rep.getC();
+                    if (result == null) {
+                        System.out.println("Thread " + threadString + "请求结果 => null");
+                        continue;
+                    }
+                    System.out.println("Thread " + threadString + " => " + req.getA() + "*" + req.getB() + " = " + rep.getC());
+                    if (req.getA() * req.getB() != result) {
+                        System.out.println("Thread " + threadString + " => " + req.getA() + "*" + req.getB() + " = " + rep.getC());
+                        integer.incrementAndGet();
+                    }
                 } catch (Exception ex) {
                     System.out.println("Thread Exception " + threadString + " => " + ex.getMessage());
                 }
